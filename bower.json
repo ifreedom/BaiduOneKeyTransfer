@@ -1,0 +1,25 @@
+{
+  "name": "baidu-onekey-transfer",
+  "description": "Transfer baidupan files in one key.",
+  "authors": [
+    "Kun Wang"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "baidupan",
+    "onekey",
+    "transfer"
+  ],
+  "homepage": "https://github.com/ifreedom/BaiduOneKeyTransfer",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.4"
+  }
+}
