@@ -1,0 +1,32 @@
+{
+  "name": "baidu-onekey-transfer",
+  "version": "0.0.1",
+  "description": "Transfer baidupan files in one key.",
+  "main": "./dist/index.js",
+  "homepage": "https://github.com/ifreedom/BaiduOneKeyTransfer#baiduonekeytransfer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ifreedom/BaiduOneKeyTransfer.git"
+  },
+  "dependencies": {
+    "body-parser": "^1.14.1",
+    "cookie-parser": "^1.4.0",
+    "express": "^4.13.3",
+    "jade": "^1.11.0",
+    "node-uuid": "^1.4.7",
+    "orm": "^2.1.27",
+    "request": "^2.67.0",
+    "sqlite3": "^3.1.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./dist/index.js"
+  },
+  "keywords": [
+    "baidupan",
+    "onekey",
+    "transfer"
+  ],
+  "author": "Kun Wang",
+  "license": "MIT"
+}
