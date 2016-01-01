@@ -1,5 +1,6 @@
 {
   "name": "baidu-onekey-transfer",
+  "private": true,
   "version": "0.0.1",
   "description": "Transfer baidupan files in one key.",
   "main": "./dist/index.js",
