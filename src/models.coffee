@@ -14,7 +14,7 @@ module.exports = (db, models, next) ->
     password: { type: 'text', size: 100 }
     uk: { type: 'integer', unsigned: true, size: 8, unique: true }
     token: { type: 'text', unique: true }
-    cookie: { type: 'text' }
+    cookie: { type: 'text', size: 4096 }
   extendModel Users
 
   Shares = db.define 'shares',
