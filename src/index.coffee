@@ -23,9 +23,8 @@ app.set 'views', __dirname + '/../views'
 
 router = express.Router()
 
-if app.get('env') == 'development'
-  router.use express.static __dirname + '/../public'
-  router.use express.static __dirname + '/../bower_components'
+router.use express.static __dirname + '/../public'
+router.use express.static __dirname + '/../bower_components'
 
 router.use(cookieParser(config.secret))
 router.use(bodyParser.urlencoded(extended: true))
