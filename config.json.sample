@@ -1,0 +1,15 @@
+{
+  "root": "/",
+  "secret": "secret",
+  "shareCodeConfig": {
+    "alphabet": "JedR8LNFY2j6MrhkBSADUyfP",
+    "blockSize": 12,
+    "minLength": 4
+  },
+  "db": {
+    "username": "username",
+    "password": "password",
+    "host": "host",
+    "database": "database"
+  }
+}
