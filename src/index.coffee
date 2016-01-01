@@ -106,20 +106,19 @@ router.post "/a/login", (req, res) ->
     return onLoginEnd(err) if err
     bdp.login username, password, codeString, captcha, (err) ->
       return onLoginEnd(err) if err
-      bdp.getUK (err, uk) ->
+      bdp.getUserInfo (err, info) ->
         return onLoginEnd(err) if err
         Users = req.models.Users
-        Users.findOne uk: uk, (err, user) ->
+        Users.findOne uk: info.uk, (err, user) ->
           return onLoginEnd(err) if err
           if user
-            user.username = username
             user.password = savePassword
             user.cookie = bdp.getCookieStr()
             user.save (err) ->
               onLoginEnd(err, user.uk)
           else
-            Users.createOne username: username, password: savePassword, uk: uk, cookie: bdp.getCookieStr(), token: uuid.v4(), (err, user) ->
-              onLoginEnd(err, uk)
+            Users.createOne username: info.username, password: savePassword, uk: info.uk, cookie: bdp.getCookieStr(), token: uuid.v4(), (err, user) ->
+              onLoginEnd(err, info.uk)
 
 router.post "/a/share", (req, res) ->
   path = req.body.path

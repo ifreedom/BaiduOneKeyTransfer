@@ -92,14 +92,15 @@ class API
   getVerifyImageUrl: (codeString) ->
     "https://passport.baidu.com/cgi-bin/genimage?#{codeString}"
 
-  getUK: (cb) ->
-    @r.get 'http://pan.baidu.com/disk/home', (err, res, body) ->
+  getUserInfo: (cb) ->
+    @r.get 'http://pan.baidu.com/share/manage', (err, res, body) ->
       return cb(err) if err
       return unless checkStatusCode(res, cb)
+      m = body.match(/MYNAME\s*=\s*"([^"]+)"/)
+      username = m[1]
       m = body.match(/MYUK\s*=\s*"([\d]+)"/)
-      m = body.match(/yunData.+"uk":([\d]+)/) unless m
       uk = parseInt(m[1])
-      cb(null, uk)
+      cb(null, username: username, uk: uk)
 
   _req: (uri, opt, cb) ->
     if typeof(uri) == 'object'
