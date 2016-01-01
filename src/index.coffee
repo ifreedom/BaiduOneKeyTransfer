@@ -23,14 +23,15 @@ app.set 'views', __dirname + '/../views'
 
 router = express.Router()
 
-router.use express.static __dirname + '/../public'
-router.use express.static __dirname + '/../bower_components'
+if app.get('env') == 'development'
+  router.use express.static __dirname + '/../public'
+  router.use express.static __dirname + '/../bower_components'
 
 router.use(cookieParser(config.secret))
 router.use(bodyParser.urlencoded(extended: true))
 
 dbPath = ''
-if isDev
+if app.get('env') == 'development'
   dbPath = path.resolve 'data.db'
   dbPath = "sqlite://" + dbPath
 else
