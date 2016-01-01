@@ -19,9 +19,6 @@
     "orm": "^2.1.27",
     "request": "^2.67.0"
   },
-  "devDependencies": {
-    "sqlite3": "^3.1.1"
-  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./dist/index.js"

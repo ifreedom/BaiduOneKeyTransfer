@@ -29,14 +29,8 @@ router.use express.static __dirname + '/../bower_components'
 router.use(cookieParser(config.secret))
 router.use(bodyParser.urlencoded(extended: true))
 
-dbPath = ''
-if app.get('env') == 'development'
-  dbPath = path.resolve 'data.db'
-  dbPath = "sqlite://" + dbPath
-else
-  db = config.db
-  dbPath = "mysql://#{db.username}:#{db.password}@#{db.host}/#{db.database}"
-
+db = config.db
+dbPath = "mysql://#{db.username}:#{db.password}@#{db.host}/#{db.database}"
 router.use orm.express dbPath,
   define: require './models'
 
