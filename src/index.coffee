@@ -76,7 +76,6 @@ router.get "/a/checklogin", (req, res) ->
         res.json err: 'ok'
 
 router.post "/a/login", (req, res) ->
-  utils.inspect req.body
   username = req.body.username
   password = req.body.password
   return res.json err: 'invalid_args' unless username and password

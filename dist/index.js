@@ -133,7 +133,6 @@
 
   router.post("/a/login", function(req, res) {
     var bdp, captcha, codeString, onLoginEnd, password, savePassword, username;
-    utils.inspect(req.body);
     username = req.body.username;
     password = req.body.password;
     if (!(username && password)) {
