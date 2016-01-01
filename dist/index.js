@@ -186,11 +186,13 @@
                 msg: "帐号异常，请前往百度盘检查！"
               });
             default:
+              logErr(err);
               return res.json({
                 err: 'unknown'
               });
           }
         } else {
+          logErr(err);
           return res.json({
             err: 'system_error'
           });
@@ -275,6 +277,7 @@
       }, function(err, share) {
         var bdp;
         if (err) {
+          logErr(err);
           return res.json({
             err: 'system_error'
           });
@@ -286,6 +289,7 @@
           return bdp.getFileMeta(path, function(err, info) {
             var pass;
             if (err) {
+              logErr(err);
               return res.json({
                 err: 'unknown'
               });
@@ -294,6 +298,7 @@
               pass = utils.genPassword();
               return bdp.share(info.fs_id, pass, function(err, info) {
                 if (err) {
+                  logErr(err);
                   return res.json({
                     err: 'unknown'
                   });
@@ -339,6 +344,7 @@
         id: utils.decodeShareCode(code)
       }, function(err, share) {
         if (err) {
+          logErr(err);
           return res.json({
             err: 'system_error'
           });
@@ -347,6 +353,7 @@
           if (share.uk === user.uk) {
             return share.remove(function(err) {
               if (err) {
+                logErr(err);
                 return res.json({
                   err: 'system_error'
                 });
@@ -385,6 +392,7 @@
       }, function(err, share) {
         var bdp, destPath;
         if (err) {
+          logErr(err);
           return res.json({
             err: 'system_error'
           });
@@ -416,11 +424,13 @@
                         msg: '空间不足！'
                       });
                     default:
+                      logErr(err);
                       return res.json({
                         err: 'unknown'
                       });
                   }
                 } else {
+                  logErr(err);
                   return res.json({
                     err: 'unknown'
                   });

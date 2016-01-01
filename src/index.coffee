@@ -97,8 +97,10 @@ router.post "/a/login", (req, res) ->
           when 5, 16, 17, 120016, 120019, 120021, 400031, 400032, 400034, 500010
             res.json err: 'other', msg: "帐号异常，请前往百度盘检查！"
           else
+            logErr err
             res.json err: 'unknown'
       else
+        logErr err
         res.json err: 'system_error'
     else
       res.cookie 'uk', uk, signed: true
@@ -135,17 +137,22 @@ router.post "/a/share", (req, res) ->
   checkUserLogined req, res, (err, user) ->
     Shares = req.models.Shares
     Shares.findOne uk: user.uk, path: path, (err, share) ->
-      return res.json err: 'system_error' if err
+      if err
+        logErr err
+        return res.json err: 'system_error'
       if share
         doReply share
       else
         bdp = BDP(user.cookie)
         bdp.getFileMeta path, (err, info) ->
-          return res.json err: 'unknown' if err
+          if err
+            logErr err
+            return res.json err: 'unknown'
           if info
             pass = utils.genPassword()
             bdp.share info.fs_id, pass, (err, info) ->
               if err
+                logErr err
                 res.json err: 'unknown'
               else
                 Shares.createOne shareid: info.shareid, uk: info.uk, pass: pass, path: path, (err, share) ->
@@ -161,11 +168,15 @@ router.post "/a/unshare", (req, res) ->
   checkUserLogined req, res, (err, user) ->
     Shares = req.models.Shares
     Shares.findOne id: utils.decodeShareCode(code), (err, share) ->
-      return res.json err: 'system_error' if err
+      if err
+        logErr err
+        return res.json err: 'system_error'
       if share
         if share.uk == user.uk
           share.remove (err) ->
-            return res.json err: 'system_error' if err
+            if err
+              logErr err
+              return res.json err: 'system_error'
             res.json err: 'ok'
         else
           res.json err: 'ok'
@@ -179,7 +190,9 @@ router.post "/a/transfer", (req, res) ->
   checkUserLogined req, res, (err, user) ->
     Shares = req.models.Shares
     Shares.findOne id: utils.decodeShareCode(code), (err, share) ->
-      return res.json err: 'system_error' if err
+      if err
+        logErr err
+        return res.json err: 'system_error'
       if share
         if share.uk == user.uk
           res.json err: 'other', msg: '请不要转存自己的文件'
@@ -196,8 +209,10 @@ router.post "/a/transfer", (req, res) ->
                   when -32
                     res.json err: 'other', msg: '空间不足！'
                   else
+                    logErr err
                     res.json err: 'unknown'
               else
+                logErr err
                 res.json err: 'unknown'
             else
               res.json err: 'ok', destPath: destPath
