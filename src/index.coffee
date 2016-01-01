@@ -9,8 +9,9 @@ BDP = require './bdp'
 utils = require './utils'
 
 logErr = (err) ->
-  utils.inspect err
+  console.dir err
   console.log err.stack
+  console.trace()
 
 config = JSON.parse fs.readFileSync('config.json', 'utf8')
 

@@ -6,9 +6,6 @@ MIN_LENGTH = 5
 MASK = (1 << DEFAULT_BLOCK_SIZE) - 1
 MAPPING = [0...DEFAULT_BLOCK_SIZE].reverse()
 
-inspect = (obj) ->
-  console.log(util.inspect(obj))
-
 setShareCodeConfig = (config) ->
   MIN_LENGTH = config.minLength
   DEFAULT_ALPHABET = config.alphabet
@@ -47,7 +44,6 @@ decodeShareCode = (code) ->
 genPassword = () ->
   ((Math.random() * 16 | 0).toString(16)  for _ in [1..4]).join('')
 
-exports.inspect = inspect
 exports.genPassword = genPassword
 exports.setShareCodeConfig = setShareCodeConfig
 exports.encodeShareCode = encodeShareCode
