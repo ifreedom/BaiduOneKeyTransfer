@@ -1,0 +1,55 @@
+extends layout
+
+block title
+  title 百度盘外链托管工具
+
+block content
+  .mask.hidden
+  .container
+    .title
+      h1 百度云外链托管工具
+      img.icon(src=baseUrl+"/img/bokt.png")
+    .content-wrap
+      .content
+        .decoration
+        .card(data-page=page)
+          .login.hidden
+            form.form-login
+              h2 登录
+              .input-group.username
+                input#username(name="username", type="text", placeholder="帐号", value= username ? username : "")
+              .input-group.password
+                input#password(name="password", type="password", placeholder="密码")
+              .input-group.verify-code.hidden
+                input#code-string.hidden(name="codeString", type="text", value=codeString)
+                input#captcha(name="captcha", type="text", placeholder="验证码")
+                img(src=baseUrl+"/img/samp-code.jpg")
+              label.checkbox
+                input(name="save-password" type="checkbox", value="yes")
+                | 保存密码
+              .verify-code-placeholder
+              .button-container
+                button 同意并登录
+              .tips
+                p 请输入您的百度账号和密码
+          .share.hidden
+            form.form-share
+              h2 分享
+              .input-group.path
+                input#path(name="path", type="text", placeholder="文件（夹）路径")
+              .button-container
+                button 分享
+            form.form-unshare
+              h2 设置
+              .input-group.transfer-code
+                input#transfer-code(name="url", type="text", placeholder="转存码")
+              .button-container
+                button 取消分享
+            .tips.hidden
+              p
+          .transfer.hidden
+            .icon-container
+              .download-icon
+                .circle-bg
+                img.arrow-icon(src=baseUrl+"/img/download-icon.png")
+            p 点击图标转存该资源
