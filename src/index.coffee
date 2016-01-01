@@ -111,17 +111,18 @@ router.post "/a/login", (req, res) ->
     return onLoginEnd(err) if err
     bdp.login username, password, codeString, captcha, (err) ->
       return onLoginEnd(err) if err
-      Users = req.models.Users
-      Users.findOne username: username, (err, user) ->
+      bdp.getUK (err, uk) ->
         return onLoginEnd(err) if err
-        if user
-          user.password = savePassword
-          user.cookie = bdp.getCookieStr()
-          user.save (err) ->
-            onLoginEnd(err, user.uk)
-        else
-          bdp.getUK (err, uk) ->
-            return onLoginEnd(err) if err
+        Users = req.models.Users
+        Users.findOne uk: uk, (err, user) ->
+          return onLoginEnd(err) if err
+          if user
+            user.username = username
+            user.password = savePassword
+            user.cookie = bdp.getCookieStr()
+            user.save (err) ->
+              onLoginEnd(err, user.uk)
+          else
             Users.createOne username: username, password: savePassword, uk: uk, cookie: bdp.getCookieStr(), token: uuid.v4(), (err, user) ->
               onLoginEnd(err, uk)
 

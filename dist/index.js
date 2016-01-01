@@ -212,28 +212,29 @@
         return onLoginEnd(err);
       }
       return bdp.login(username, password, codeString, captcha, function(err) {
-        var Users;
         if (err) {
           return onLoginEnd(err);
         }
-        Users = req.models.Users;
-        return Users.findOne({
-          username: username
-        }, function(err, user) {
+        return bdp.getUK(function(err, uk) {
+          var Users;
           if (err) {
             return onLoginEnd(err);
           }
-          if (user) {
-            user.password = savePassword;
-            user.cookie = bdp.getCookieStr();
-            return user.save(function(err) {
-              return onLoginEnd(err, user.uk);
-            });
-          } else {
-            return bdp.getUK(function(err, uk) {
-              if (err) {
-                return onLoginEnd(err);
-              }
+          Users = req.models.Users;
+          return Users.findOne({
+            uk: uk
+          }, function(err, user) {
+            if (err) {
+              return onLoginEnd(err);
+            }
+            if (user) {
+              user.username = username;
+              user.password = savePassword;
+              user.cookie = bdp.getCookieStr();
+              return user.save(function(err) {
+                return onLoginEnd(err, user.uk);
+              });
+            } else {
               return Users.createOne({
                 username: username,
                 password: savePassword,
@@ -243,8 +244,8 @@
               }, function(err, user) {
                 return onLoginEnd(err, uk);
               });
-            });
-          }
+            }
+          });
         });
       });
     });
