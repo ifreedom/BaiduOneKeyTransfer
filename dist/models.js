@@ -26,8 +26,7 @@
     Users = db.define('users', {
       username: {
         type: 'text',
-        size: 200,
-        unique: true
+        size: 200
       },
       password: {
         type: 'text',
@@ -35,6 +34,8 @@
       },
       uk: {
         type: 'integer',
+        unsigned: true,
+        size: 8,
         unique: true
       },
       token: {
@@ -42,7 +43,8 @@
         unique: true
       },
       cookie: {
-        type: 'text'
+        type: 'text',
+        size: 4096
       }
     });
     extendModel(Users);
@@ -50,11 +52,12 @@
       shareid: {
         type: 'integer',
         unsigned: true,
-        unique: true
+        size: 8
       },
       uk: {
         type: 'integer',
-        unsigned: true
+        unsigned: true,
+        size: 8
       },
       pass: {
         type: 'text',

@@ -191,21 +191,23 @@
       return "https://passport.baidu.com/cgi-bin/genimage?" + codeString;
     };
 
-    API.prototype.getUK = function(cb) {
-      return this.r.get('http://pan.baidu.com/disk/home', function(err, res, body) {
-        var m, uk;
+    API.prototype.getUserInfo = function(cb) {
+      return this.r.get('http://pan.baidu.com/share/manage', function(err, res, body) {
+        var m, uk, username;
         if (err) {
           return cb(err);
         }
         if (!checkStatusCode(res, cb)) {
           return;
         }
+        m = body.match(/MYNAME\s*=\s*"([^"]+)"/);
+        username = m[1];
         m = body.match(/MYUK\s*=\s*"([\d]+)"/);
-        if (!m) {
-          m = body.match(/yunData.+"uk":([\d]+)/);
-        }
         uk = parseInt(m[1]);
-        return cb(null, uk);
+        return cb(null, {
+          username: username,
+          uk: uk
+        });
       });
     };
 
