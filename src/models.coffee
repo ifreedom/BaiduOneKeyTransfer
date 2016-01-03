@@ -18,7 +18,7 @@ module.exports = (db, models, next) ->
   extendModel Users
 
   SmsVerifys = db.define 'smsverifys',
-    authtoken: { type: 'text', size: 500, unique: true }
+    authtoken: { type: 'text', size: 500 }
     password: { type: 'text', size: 100 }
     loginproxy: { type: 'text', size: 500 }
     cookie: { type: 'text', size: 4096 }
