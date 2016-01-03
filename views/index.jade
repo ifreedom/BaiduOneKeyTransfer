@@ -21,9 +21,12 @@ block content
               .input-group.password
                 input#password(name="password", type="password", placeholder="密码")
               .input-group.verify-code.hidden
-                input#code-string.hidden(name="codeString", type="text", value=codeString)
+                input#code-string.hidden(name="codeString", type="text")
                 input#captcha(name="captcha", type="text", placeholder="验证码")
                 img(src=baseUrl+"/img/samp-code.jpg")
+              .input-group.verify-sms.hidden
+                input#sms-verify-id.hidden(name="smsVerifyId", type="text")
+                input#captcha-sms(name="captchaSms", type="text", placeholder="短信验证码")
               label.checkbox
                 input(name="save-password" type="checkbox", value="yes")
                 | 保存密码

@@ -17,6 +17,13 @@ module.exports = (db, models, next) ->
     cookie: { type: 'text', size: 4096 }
   extendModel Users
 
+  SmsVerifys = db.define 'smsverifys',
+    authtoken: { type: 'text', size: 500, unique: true }
+    password: { type: 'text', size: 100 }
+    loginproxy: { type: 'text', size: 500 }
+    cookie: { type: 'text', size: 4096 }
+  extendModel SmsVerifys
+
   Shares = db.define 'shares',
     shareid: { type: 'integer', unsigned: true, size: 8 }
     uk: { type: 'integer', unsigned: true, size: 8 }
@@ -27,5 +34,6 @@ module.exports = (db, models, next) ->
   db.sync (err) ->
     throw err if err
     models.Users = Users
+    models.SmsVerifys = SmsVerifys
     models.Shares = Shares
     next();

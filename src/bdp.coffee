@@ -1,4 +1,5 @@
 vm = require 'vm'
+qs = require 'querystring'
 request = require 'request'
 tough = require 'tough-cookie'
 
@@ -13,7 +14,7 @@ checkStatusCode = (res, cb) ->
     false
 
 class LoginError extends Error
-  constructor: (@errno, @codeString = null, @body = null) ->
+  constructor: (@errno, @result, @body) ->
     super
     @name = "LoginError"
     Error.captureStackTrace(this, @constructor)
@@ -40,7 +41,6 @@ class API
     @r.get url, (err, res, body) =>
       return cb(err) if err
       return unless checkStatusCode(res, cb)
-      if err then return cb(err)
       data = JSON.parse(body.replace(/'/g, '"'))
       @token = data['data']['token']
       cb(null)
@@ -79,18 +79,80 @@ class API
     @r.post 'https://passport.baidu.com/v2/api/?login', form: data, (err, res, body) =>
       return cb(err) if err
       return unless checkStatusCode(res, cb)
-      [ _, errNo, codeString ] = body.match(/err_no=(\d+).+codeString=([\w\d]*)/)
-      errNo = parseInt(errNo)
-      switch errNo
-        when 0
-          cb(null)
-        when 6, 257
-          cb(new LoginError(errNo, codeString))
-        else
-          cb(new LoginError(errNo, null, body))
+      m = body.match(/href \+= "([^"]+)"/)
+      ret = qs.decode m[1]
+      errno = parseInt(ret.err_no)
+      if errno == 0
+        cb(null)
+      else
+        cb(new LoginError(errno, ret, body))
 
   getVerifyImageUrl: (codeString) ->
     "https://passport.baidu.com/cgi-bin/genimage?#{codeString}"
+
+  sendSms: (authToken, cb) ->
+    qs =
+      authtoken: authToken
+      type: 'mobile'
+      jsonp: '1'
+      apiver: 'v3'
+      verifychannel: ''
+      action: 'send'
+      vcode: ''
+      questionAndAnswer: ''
+      needsid: ''
+      rsakey: ''
+      countrycode: ''
+      subpro: 'netdisk_web'
+      callback: 'callback'
+    @r.get "http://passport.baidu.com/v2/sapi/authwidgetverify", qs: qs, (err, res, body) ->
+      return cb(err) if err
+      return unless checkStatusCode(res, cb)
+      sandbox = { callback: (data) -> data }
+      ret = vm.runInNewContext body, sandbox
+      if ret.errno == '110000'
+        cb(null)
+      else
+        cb(new RESTError('SEND_SMS', parseInt(ret.errno), ret))
+
+  checkSmsCode: (authToken, captcha, cb) ->
+    qs =
+      authtoken: authToken
+      type: 'mobile'
+      jsonp: '1'
+      apiver: 'v3'
+      verifychannel: ''
+      action: 'check'
+      vcode: captcha
+      questionAndAnswer: ''
+      needsid: ''
+      rsakey: ''
+      countrycode: ''
+      subpro: 'netdisk_web'
+      callback: 'callback'
+    @r.get "http://passport.baidu.com/v2/sapi/authwidgetverify", qs: qs, (err, res, body) ->
+      return cb(err) if err
+      return unless checkStatusCode(res, cb)
+      sandbox = { callback: (data) -> data }
+      ret = vm.runInNewContext body, sandbox
+      if ret.errno == '110000'
+        cb(null)
+      else
+        cb(new RESTError('CHECK_SMS_CODE', parseInt(ret.errno), ret))
+
+  doLoginProxy: (loginProxy, cb) ->
+    url = loginProxy + "&apiver=v3&tt=#{time()}&callback=callback"
+    @r.get url, (err, res, body) ->
+      return cb(err) if err
+      return unless checkStatusCode(res, cb)
+      console.log body
+      sandbox = { callback: (data) -> data }
+      ret = vm.runInNewContext body, sandbox
+      errno = parseInt(ret.errInfo.no)
+      if errno == 0
+        cb(null)
+      else
+        cb(new RESTError('DO_LOGIN_PROXY', errno, ret))
 
   getUserInfo: (cb) ->
     @r.get 'http://pan.baidu.com/share/manage', (err, res, body) ->

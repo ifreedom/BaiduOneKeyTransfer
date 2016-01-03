@@ -121,10 +121,12 @@ button:active {
 .login .input-group.password {
     background-image: url(../img/password-icon.png);
 }
-.login .verify-code input {
+.login .verify-code input,
+.login .verify-sms input {
     width: 220px;
 }
-.login .verify-code img {
+.login .verify-code img,
+.login .verify-sms img{
     float: right;
     border: white 3px solid;
     border-radius: 3px;

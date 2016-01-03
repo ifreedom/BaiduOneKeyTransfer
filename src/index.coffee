@@ -69,6 +69,21 @@ router.get "/a/checklogin", (req, res) ->
       else
         res.json err: 'ok'
 
+saveUser = (req, bdp, password, cb) ->
+  bdp.getUserInfo (err, info) ->
+    return cb(err) if err
+    Users = req.models.Users
+    Users.findOne uk: info.uk, (err, user) ->
+      return cb(err) if err
+      if user
+        user.password = password
+        user.cookie = bdp.getCookieStr()
+        user.save (err) ->
+          cb(err, info.uk)
+      else
+        Users.createOne username: info.username, password: password, uk: info.uk, cookie: bdp.getCookieStr(), token: uuid.v4(), (err, user) ->
+          cb(err, info.uk)
+
 router.post "/a/login", (req, res) ->
   username = req.body.username
   password = req.body.password
@@ -77,47 +92,119 @@ router.post "/a/login", (req, res) ->
   savePassword = if req.body['save-password']? then password else ''
   codeString = req.body.codeString or ''
   captcha = req.body.captcha or ''
+  bdp = BDP()
 
-  onLoginEnd = (err, uk) ->
+  saveSmsVerify = (token, proxy, cb) ->
+    SmsVerifys = req.models.SmsVerifys
+    SmsVerifys.findOne authtoken: token, (err, verify) ->
+      return cb(err) if err
+      if verify
+        verify.password = savePassword
+        verify.loginproxy = proxy
+        verify.cookie = bdp.getCookieStr()
+        verify.save (err) ->
+          cb(err, verify)
+      else
+        SmsVerifys.createOne authtoken: token, password: savePassword, loginproxy: proxy, cookie: bdp.getCookieStr(), (err, verify) ->
+          cb(err, verify)
+
+  sendSmsVerify = (ret) ->
+    bdp.sendSms ret.authtoken, (err) ->
+      if err
+        if err.name == "RESTError"
+          if err.errno == 62003
+            res.json err: 'other', msg: "短信发送次数过多"
+          else
+            res.json err: 'other', msg: err.result.msg
+        else
+          logErr err
+          res.json err: 'system_error'
+      else
+        saveSmsVerify ret.authtoken, ret.loginproxy, (err, verify) ->
+          if err
+            logErr err
+            res.json err: 'system_error'
+          else
+            res.json err: 'verify_sms', smsVerifyId: verify.id
+
+  onLoginError = (err) ->
+    if err.name == "LoginError"
+      ret = err.result
+      switch err.errno
+        when 1, 2, 4, 7
+          res.json err: 'other', msg: "帐号或密码有误！"
+        when 6, 500002, 500018
+          res.json err: 'verify_error', codeString: ret.codeString, verifyImgUrl: bdp.getVerifyImageUrl(ret.codeString)
+        when 3, 257, 200010
+          res.json err: 'need_verify', codeString: ret.codeString, verifyImgUrl: bdp.getVerifyImageUrl(ret.codeString)
+        when 400031
+          sendSmsVerify(ret)
+        when 5, 16, 17, 120016, 120019, 120021, 400032, 400034, 500010
+          logErr err
+          res.json err: 'other', msg: "帐号异常，请前往百度盘检查！"
+        else
+          logErr err
+          res.json err: 'unknown'
+    else
+      logErr err
+      res.json err: 'system_error'
+
+  bdp.refreshToken (err) ->
     if err
-      if err.name == "LoginError"
-        switch err.errno
-          when 1, 2, 4, 7
-            res.json err: 'other', msg: "帐号或密码有误！"
-          when 6, 500002, 500018
-            res.json err: 'verify_error', codeString: err.codeString, verifyImgUrl: bdp.getVerifyImageUrl(err.codeString)
-          when 3, 257, 200010
-            res.json err: 'need_verify', codeString: err.codeString, verifyImgUrl: bdp.getVerifyImageUrl(err.codeString)
-          when 5, 16, 17, 120016, 120019, 120021, 400031, 400032, 400034, 500010
-            res.json err: 'other', msg: "帐号异常，请前往百度盘检查！"
+      logErr err
+      res.json err: 'system_error'
+    else
+      bdp.login username, password, codeString, captcha, (err) ->
+        if err
+          onLoginError err
+        else
+          saveUser req, bdp, savePassword, (err, uk) ->
+            if err
+              logErr err
+              res.json err: 'system_error'
+            else
+              res.cookie 'uk', uk, signed: true
+              res.json err: 'ok'
+
+router.post "/a/smsverify", (req, res) ->
+  verifyId = req.body.verifyId
+  captcha = req.body.captcha
+  return res.json err: 'invalid_args' unless verifyId and captcha
+
+  SmsVerifys = req.models.SmsVerifys
+  SmsVerifys.findOne id: verifyId, (err, verify) ->
+    bdp = BDP(verify.cookie)
+    bdp.checkSmsCode verify.authtoken, captcha, (err) ->
+      if err
+        if err.name == "RESTError"
+          if err.errno == 62004
+            res.json err: 'other', msg: '短信验证码错误'
+          else if err.errno == 62005
+            res.json err: 'other', msg: '短信验证码已失效，请刷新后重试'
           else
             logErr err
             res.json err: 'unknown'
+        else
+          logErr err
+          res.json err: 'system_error'
       else
-        logErr err
-        res.json err: 'system_error'
-    else
-      res.cookie 'uk', uk, signed: true
-      res.json err: 'ok'
-
-  bdp = BDP()
-  bdp.refreshToken (err) ->
-    return onLoginEnd(err) if err
-    bdp.login username, password, codeString, captcha, (err) ->
-      return onLoginEnd(err) if err
-      bdp.getUserInfo (err, info) ->
-        return onLoginEnd(err) if err
-        Users = req.models.Users
-        Users.findOne uk: info.uk, (err, user) ->
-          return onLoginEnd(err) if err
-          if user
-            user.password = savePassword
-            user.cookie = bdp.getCookieStr()
-            user.save (err) ->
-              onLoginEnd(err, user.uk)
+        bdp.doLoginProxy verify.loginproxy, (err) ->
+          if err
+            logErr err
+            res.json err: 'unknown'
           else
-            Users.createOne username: info.username, password: savePassword, uk: info.uk, cookie: bdp.getCookieStr(), token: uuid.v4(), (err, user) ->
-              onLoginEnd(err, info.uk)
+            saveUser req, bdp, verify.password, (err, uk) ->
+              if err
+                logErr err
+                res.json err: 'unknown'
+              else
+                verify.remove (err) ->
+                  if err
+                    logErr err
+                    res.json err: 'system_error'
+                  else
+                    res.cookie 'uk', uk, signed: true
+                    res.json err: 'ok'
 
 router.post "/a/share", (req, res) ->
   path = req.body.path

@@ -152,7 +152,50 @@ $(document).ready(function() {
       });
       $(".form-login #username").val(username);
 
-      $(".form-login button").click(function() {
+      var isSmsVerify = false;
+      var setErrMsg = function(msg) {
+        $(".form-login .tips").addClass("warning");
+        $(".form-login .tips p").text(msg);
+      };
+      var setVerify = function(codeString, verifyImgUrl) {
+        $(".form-login .verify-code").removeClass("hidden");
+        $(".form-login .verify-sms").addClass("hidden");
+        $(".form-login .verify-code-placeholder").addClass("hidden");
+        $(".form-login #code-string").val(codeString);
+        $(".form-login .verify-code img").attr("src", verifyImgUrl);
+      };
+      var setSmsVerify = function(smsVerifyId) {
+        $(".form-login .verify-code").addClass("hidden");
+        $(".form-login .verify-sms").removeClass("hidden");
+        $(".form-login .verify-code-placeholder").addClass("hidden");
+        $(".form-login #sms-verify-id").val(smsVerifyId);
+      };
+
+      var verifySms = function() {
+        $("body .mask").removeClass("hidden");
+
+        $.post(apiPrefix+'smsverify', {
+          verifyId: $(".form-login #sms-verify-id").val(),
+          captcha: $(".form-login #captcha-sms").val()
+        }, function(ret) {
+          $("body .mask").addClass("hidden");
+
+          var err = ret.err;
+          if (err == 'ok') {
+            goPage();
+          }
+          else if (err == 'other') {
+            setErrMsg(ret.msg);
+          }
+          else if (err == 'system_error') {
+            setErrMsg("系统错误，请稍候重试");
+          }
+          else {
+            setErrMsg("未知错误，请刷新后重试");
+          }
+        });
+      };
+      var login = function() {
         $("body .mask").removeClass("hidden");
 
         $.post(apiPrefix+'login', {
@@ -162,22 +205,6 @@ $(document).ready(function() {
           captcha: $(".form-login #captcha").val()
         }, function(ret) {
           $("body .mask").addClass("hidden");
-
-          var setErrMsg = function(msg) {
-            $(".form-login .tips").addClass("warning");
-            $(".form-login .tips p").text(msg);
-          };
-
-          var verify = false;
-          var setVerify = function(codeString, verifyImgUrl) {
-            if (!verify) {
-              verify = true;
-              $(".form-login .verify-code").removeClass("hidden");
-              $(".form-login .verify-code-placeholder").addClass("hidden");
-            }
-            $(".form-login #code-string").val(codeString);
-            $(".form-login .verify-code img").attr("src", verifyImgUrl);
-          };
 
           var err = ret.err;
           if (err == 'ok') {
@@ -190,6 +217,11 @@ $(document).ready(function() {
           else if (err == 'verify_error') {
             setErrMsg("验证码错误");
             setVerify(ret.codeString, ret.verifyImgUrl);
+          }
+          else if (err == 'verify_sms') {
+            isSmsVerify = true;
+            setErrMsg("短信已发送，请输入短信验证码");
+            setSmsVerify(ret.smsVerifyId);
           }
           else if (err == 'file_not_found') {
             setErrMsg("文件不存在");
@@ -204,6 +236,15 @@ $(document).ready(function() {
             setErrMsg("未知错误，请刷新后重试");
           }
         });
+      };
+
+      $(".form-login button").click(function() {
+        if (isSmsVerify) {
+          verifySms();
+        }
+        else {
+          login();
+        }
         return false;
       });
     }
