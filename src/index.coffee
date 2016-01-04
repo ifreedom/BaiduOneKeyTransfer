@@ -264,6 +264,27 @@ router.post "/a/unshare", (req, res) ->
       else
         res.json err: 'ok'
 
+makeTransferDir = (bdp, path, cb) ->
+  mkdir = (path, cb) ->
+    bdp.getFileMeta path, (err, info) ->
+      return cb(err) if err
+      return cb(null) if info
+      bdp.mkdir path, (err) ->
+        return cb(err) if err
+        cb(null)
+
+  parts = path.split('/')
+  p = parts.shift()
+  next = ->
+    if parts.length > 0
+      p = p + '/' + parts.shift()
+      mkdir p, (err) ->
+        return cb(err) if err
+        next()
+    else
+      cb(null)
+  next()
+
 router.post "/a/transfer", (req, res) ->
   code = req.body.code
   return res.json err: 'invalid_args' unless code
@@ -279,24 +300,29 @@ router.post "/a/transfer", (req, res) ->
           res.json err: 'other', msg: '请不要转存自己的文件'
         else
           bdp = BDP(user.cookie)
-          destPath = '/'
-          bdp.transfer share.shareid, share.uk, share.pass, share.path, destPath, (err) ->
+          destPath = '/apps/bokt/#{code}'
+          makeTransferDir bdp, destPath, (err) ->
             if err
-              if err.name == "RESTError"
-                switch err.errno
-                  when -7, -8, -16, -17
-                    # FIXME: auto re-share
-                    res.json err: 'other', msg: '分享已失效！'
-                  when -32
-                    res.json err: 'other', msg: '空间不足！'
+              logErr err
+              res.json err: 'unknown'
+            else
+              bdp.transfer share.shareid, share.uk, share.pass, share.path, destPath, (err) ->
+                if err
+                  if err.name == "RESTError"
+                    switch err.errno
+                      when -7, -8, -16, -17
+                        # FIXME: auto re-share
+                        res.json err: 'other', msg: '分享已失效！'
+                      when -32
+                        res.json err: 'other', msg: '空间不足！'
+                      else
+                        logErr err
+                        res.json err: 'unknown'
                   else
                     logErr err
                     res.json err: 'unknown'
-              else
-                logErr err
-                res.json err: 'unknown'
-            else
-              res.json err: 'ok', destPath: destPath
+                else
+                  res.json err: 'ok', destPath: destPath
       else
         res.json err: 'file_not_found'
 

@@ -205,6 +205,22 @@ class API
         else
           cb(new RESTError('FILE_META', ret.errno, ret))
 
+  mkdir: (path, cb) ->
+    qs =
+      a: 'commit'
+    form =
+      path: path
+      isdir: '1'
+      block_list: '[]'
+    this._req "create", qs: qs, form: form, (err, res, body) ->
+      return cb(err) if err
+      return unless checkStatusCode(res, cb)
+      ret = JSON.parse(body)
+      if ret.errno == 0
+        cb(null, ret)
+      else
+        cb(new RESTError('MKDIR', ret.errno, ret))
+
   share: (fid, pwd, cb) ->
     if typeof(pwd) == 'function'
       cb = pwd

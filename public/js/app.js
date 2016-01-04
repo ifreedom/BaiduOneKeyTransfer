@@ -109,7 +109,7 @@ $(document).ready(function() {
           if (err == 'ok') {
             transfered = true;
             $(".transfer p").removeClass("warning");
-            $(".transfer p").text("转存成功");
+            $(".transfer p").text("转存成功，已转存到目录" + ret.destPath);
           }
           else if (err == 'file_not_found') {
             setErrMsg("文件不存在");
